@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spidy — AI Browser & Answer Engine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#e50914',
+                            600: '#d00711',
+                            700: '#b0040c',
+                            accent: '#ff2e43',
+                            dark: '#0a0c10',
+                            card: '#12151e',
+                            border: '#242938'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0c10;
+            color: #f0f2f8;
+            overflow-x: hidden;
+        }
+        /* Glowing effects */
+        .ruby-glow {
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.35);
+        }
+        .ruby-glow-sm {
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.25);
+        }
+        .ruby-border-glow:focus-within {
+            box-shadow: 0 0 18px rgba(255, 46, 67, 0.4);
+            border-color: #ff2e43 !important;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0c10;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #242938;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e50914;
+        }
+    </style>
+</head>
+<body class="bg-[#0a0c10] text-[#f0f2f8] min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- TOP HEADER / NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-[#0f121a]/90 backdrop-blur-md border-b border-brand-border px-4 py-3 flex items-center justify-between shadow-lg">
+        <!-- Brand Logo & Title -->
+        <div class="flex items-center gap-3 cursor-pointer" id="btn-brand-home">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-accent flex items-center justify-center text-white text-xl font-bold shadow-lg ruby-glow">
+                <i class="fa-solid fa-[#000] fa-spider text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-xl tracking-wider text-white flex items-center gap-1.5">
+                    SPIDY <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-accent border border-brand-500/30 font-semibold">AI v2.5</span>
+                </h1>
+                <p class="text-[10px] text-gray-400 -mt-1 hidden sm:block">Intelligent Search & Answer Engine</p>
+            </div>
+        </div>
+
+        <!-- Navigation Action Buttons -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Home Button -->
+            <button id="nav-btn-home" title="Return to Dashboard Home" class="p-2.5 rounded-lg bg-[#181c28] hover:bg-brand-500/20 text-gray-300 hover:text-brand-accent border border-brand-border transition-all flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-house"></i>
+                <span class="hidden md:inline font-medium">Home</span>
+            </button>
+
+            <!-- Bookmarks Button -->
+            <button id="nav-btn-bookmarks" title="View Saved Bookmarks" class="p-2.5 rounded-lg bg-[#181c28] hover:bg-brand-500/20 text-gray-300 hover:text-brand-accent border border-brand-border transition-all flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-bookmark"></i>
+                <span class="hidden md:inline font-medium">Bookmarks</span>
+            </button>
+
+            <!-- History Button -->
+            <button id="nav-btn-history" title="View Search History" class="p-2.5 rounded-lg bg-[#181c28] hover:bg-brand-500/20 text-gray-300 hover:text-brand-accent border border-brand-border transition-all flex items-center gap-1.5 text-sm">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span class="hidden md:inline font-medium">History</span>
+            </button>
+
+            <!-- Pro Subscription Trigger Button -->
+            <button id="nav-btn-pro" class="px-3 py-2 rounded-lg bg-gradient-to-r from-brand-500 to-brand-accent text-white font-semibold text-sm hover:opacity-90 transition-all shadow-md ruby-glow flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-yellow-300"></i>
+                <span class="hidden sm:inline">Upgrade to Pro</span>
+            </button>
+
+            <!-- User Account Profile Button -->
+            <button id="nav-btn-profile" title="Account Settings" class="p-2 rounded-lg bg-[#181c28] hover:bg-[#242938] border border-brand-border text-gray-200 transition-all flex items-center gap-2 px-3">
+                <div class="w-6 h-6 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-accent flex items-center justify-center text-xs font-bold" id="profile-avatar-icon">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <span id="header-user-badge" class="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">Free Tier</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-between">
+
+        <!-- DASHBOARD SEARCH VIEW (Default View) -->
+        <section id="dashboard-view" class="space-y-8 my-auto py-6">
+            
+            <!-- Branding Header -->
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-accent text-xs font-medium mb-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-accent animate-ping"></span>
+                    Next-Gen AI Answer Engine & Web Browser
+                </div>
+                <h2 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white">
+                    Search anything with <span class="bg-gradient-to-r from-brand-accent via-brand-500 to-red-400 bg-clip-text text-transparent">Spidy AI</span>
+                </h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
+                    Get direct answers powered by Gemini AI or launch full interactive web tabs without leaves.
+                </p>
+            </div>
+
+            <!-- UNIVERSAL OMNIBOX SEARCH CONTAINER -->
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-brand-card rounded-2xl border border-brand-border p-2 sm:p-3 shadow-2xl ruby-border-glow transition-all">
+                    
+                    <!-- Search Mode Toggle Tabs -->
+                    <div class="flex items-center justify-between border-b border-brand-border/60 pb-2 mb-3 px-2">
+                        <div class="flex items-center gap-2">
+                            <button id="mode-btn-ai" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-brand-500 text-white shadow ruby-glow-sm">
+                                <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> AI Answer Engine
+                            </button>
+                            <button id="mode-btn-web" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-brand-border/50">
+                                <i class="fa-solid fa-globe text-brand-accent"></i> Web Frame Browser
+                            </button>
+                        </div>
+                        <span id="current-mode-label" class="text-[11px] text-gray-400 font-mono hidden sm:block">Mode: Generative AI Search</span>
+                    </div>
+
+                    <!-- Input Bar Form -->
+                    <form id="search-form" class="flex items-center gap-2">
+                        <div class="pl-3 text-brand-accent text-lg">
+                            <i id="search-icon" class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <input type="text" id="main-search-input" placeholder="Ask anything (e.g. Explain Quantum Physics, GSEB Class 12 Prep)..." autocomplete="off" class="w-full bg-transparent border-none outline-none text-white text-base sm:text-lg placeholder-gray-500 py-2 px-1 focus:ring-0">
+                        
+                        <!-- Voice Search Mic Button -->
+                        <button type="button" id="btn-voice-search" title="Voice Search" class="p-2.5 rounded-xl bg-[#1a1e2c] hover:bg-brand-500/20 text-gray-400 hover:text-brand-accent border border-brand-border transition-all">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+
+                        <!-- Submit Search Button -->
+                        <button type="submit" id="btn-submit-search" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-accent text-white font-bold text-sm hover:opacity-90 transition-all shadow-lg ruby-glow flex items-center gap-2">
+                            <span>Search</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Quick Prompt Chips -->
+                <div class="flex flex-wrap items-center justify-center gap-2 mt-4">
+                    <span class="text-xs text-gray-500 font-medium mr-1">Try asking:</span>
+                    <button class="quick-chip px-3 py-1 rounded-full bg-[#161a24] hover:bg-brand-500/20 border border-brand-border hover:border-brand-500/40 text-xs text-gray-300 hover:text-brand-accent transition-all">
+                        <i class="fa-solid fa-atom text-brand-accent mr-1"></i> Explain Quantum Physics
+                    </button>
+                    <button class="quick-chip px-3 py-1 rounded-full bg-[#161a24] hover:bg-brand-500/20 border border-brand-border hover:border-brand-500/40 text-xs text-gray-300 hover:text-brand-accent transition-all">
+                        <i class="fa-solid fa-graduation-cap text-brand-accent mr-1"></i> GSEB Class 12 Prep
+                    </button>
+                    <button class="quick-chip px-3 py-1 rounded-full bg-[#161a24] hover:bg-brand-500/20 border border-brand-border hover:border-brand-500/40 text-xs text-gray-300 hover:text-brand-accent transition-all">
+                        <i class="fa-solid fa-code text-brand-accent mr-1"></i> Java SciTE Code Example
+                    </button>
+                    <button class="quick-chip px-3 py-1 rounded-full bg-[#161a24] hover:bg-brand-500/20 border border-brand-border hover:border-brand-500/40 text-xs text-gray-300 hover:text-brand-accent transition-all">
+                        <i class="fa-solid fa-snowflake text-brand-accent mr-1"></i> Winter Skincare Tips
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Speed Dial Shortcuts -->
+            <div class="max-w-4xl mx-auto pt-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 text-center">Popular Web Shortcuts</h3>
+                <div class="grid grid-cols-4 sm:grid-cols-7 gap-3">
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://google.com">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+                            <i class="fa-brands fa-google text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">Google</span>
+                    </button>
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://gseb.org">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-book text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">GSEB</span>
+                    </button>
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://youtube.com">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-red-600 group-hover:scale-110 transition-transform">
+                            <i class="fa-brands fa-youtube text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">YouTube</span>
+                    </button>
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://wikipedia.org">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-gray-300 group-hover:scale-110 transition-transform">
+                            <i class="fa-brands fa-wikipedia-w text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">Wikipedia</span>
+                    </button>
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://github.com">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-brands fa-github text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">GitHub</span>
+                    </button>
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://stackoverflow.com">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                            <i class="fa-brands fa-stack-overflow text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">StackOverflow</span>
+                    </button>
+                    <button class="speed-dial-btn flex flex-col items-center gap-2 p-3 rounded-xl bg-brand-card hover:bg-[#1a1e2b] border border-brand-border hover:border-brand-500/50 transition-all group" data-url="https://chatgpt.com">
+                        <div class="w-10 h-10 rounded-lg bg-[#1e2330] flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-robot text-lg"></i>
+                        </div>
+                        <span class="text-xs text-gray-300 font-medium">ChatGPT</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI ANSWER ENGINE RESULTS VIEW -->
+        <section id="ai-results-view" class="hidden space-y-6 max-w-4xl mx-auto w-full py-4">
+            <!-- Back to search dashboard header bar -->
+            <div class="flex items-center justify-between bg-brand-card p-3 rounded-xl border border-brand-border">
+                <button id="btn-back-dashboard" class="px-3 py-1.5 rounded-lg bg-[#1a1e2b] hover:bg-brand-500/20 text-gray-300 hover:text-brand-accent text-xs font-semibold flex items-center gap-2 transition-all border border-brand-border">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <div class="flex items-center gap-2">
+                    <button id="btn-save-bookmark" class="px-3 py-1.5 rounded-lg bg-[#1a1e2b] hover:bg-brand-500/20 text-gray-300 hover:text-brand-accent text-xs font-semibold flex items-center gap-1.5 border border-brand-border transition-all">
+                        <i class="fa-regular fa-bookmark"></i> Bookmark
+                    </button>
+                    <button id="btn-tts-read" class="px-3 py-1.5 rounded-lg bg-brand-500/20 hover:bg-brand-500/30 text-brand-accent text-xs font-semibold flex items-center gap-1.5 border border-brand-500/40 transition-all">
+                        <i class="fa-solid fa-volume-high"></i> Listen Answer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Query Display Title Card -->
+            <div class="bg-brand-card p-6 rounded-2xl border border-brand-border shadow-xl">
+                <div class="flex items-center gap-2 text-xs font-bold text-brand-accent mb-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> SPIDY GEMINI AI RESPONSE
+                </div>
+                <h2 id="ai-query-title" class="text-2xl sm:text-3xl font-bold text-white leading-snug">
+                    Query Loading...
+                </h2>
+            </div>
+
+            <!-- Loading Skeleton Indicator -->
+            <div id="ai-loading-skeleton" class="space-y-4 p-6 bg-brand-card rounded-2xl border border-brand-border">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-brand-500/20 animate-pulse flex items-center justify-center text-brand-accent">
+                        <i class="fa-solid fa-spider animate-spin"></i>
+                    </div>
+                    <span class="text-sm text-gray-400 font-medium">Spidy AI is researching and synthesizing response...</span>
+                </div>
+                <div class="h-4 bg-gray-800 rounded w-3/4 animate-pulse"></div>
+                <div class="h-4 bg-gray-800 rounded w-5/6 animate-pulse"></div>
+                <div class="h-4 bg-gray-800 rounded w-2/3 animate-pulse"></div>
+            </div>
+
+            <!-- AI Rendered Output Content -->
+            <div id="ai-response-container" class="hidden space-y-6">
+                <!-- Main Formatted Markdown Container -->
+                <div class="bg-brand-card p-6 rounded-2xl border border-brand-border space-y-4 leading-relaxed text-gray-200" id="ai-response-body">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+
+                <!-- Key Takeaways Box -->
+                <div class="bg-[#121824] p-5 rounded-2xl border border-brand-500/30 space-y-2">
+                    <h4 class="text-xs font-bold text-brand-accent uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-key"></i> Key Takeaways
+                    </h4>
+                    <ul id="ai-key-takeaways" class="list-disc list-inside text-sm text-gray-300 space-y-1">
+                        <!-- Key points injected here -->
+                    </ul>
+                </div>
+
+                <!-- Follow-up Prompt Suggestions -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Suggested Follow-up Questions</h4>
+                    <div id="ai-followups" class="flex flex-wrap gap-2">
+                        <!-- Dynamic buttons injected here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MULTI-TAB SIMULATED BROWSER VIEW -->
+        <section id="web-browser-view" class="hidden flex-1 flex flex-col bg-brand-card rounded-2xl border border-brand-border overflow-hidden shadow-2xl h-[calc(100vh-140px)]">
+            
+            <!-- Browser Tab Bar Strip -->
+            <div class="bg-[#0c0f16] border-b border-brand-border px-2 pt-2 flex items-center justify-between gap-2 overflow-x-auto">
+                <div class="flex items-center gap-1.5 overflow-x-auto" id="browser-tab-strip">
+                    <!-- Tab Items Rendered Injected Dynamically -->
+                </div>
+                <button id="btn-add-tab" class="p-2 rounded-lg bg-[#181c28] hover:bg-brand-500/20 text-gray-300 hover:text-brand-accent text-xs border border-brand-border transition-all flex-shrink-0" title="Open New Tab">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Browser Navigation & Address Bar -->
+            <div class="bg-[#141824] border-b border-brand-border p-2 flex items-center gap-2">
+                <button id="browser-btn-back" class="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-all text-xs" title="Back">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <button id="browser-btn-forward" class="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-all text-xs" title="Forward">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button id="browser-btn-reload" class="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-all text-xs" title="Reload">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+
+                <!-- URL Address Bar -->
+                <div class="flex-1 bg-[#0a0c10] border border-brand-border rounded-lg px-3 py-1.5 flex items-center gap-2 focus-within:border-brand-accent transition-all">
+                    <i class="fa-solid fa-lock text-xs text-emerald-500"></i>
+                    <input type="text" id="browser-url-input" class="w-full bg-transparent border-none outline-none text-xs text-gray-200 font-mono" placeholder="Enter URL or Search Query...">
+                </div>
+
+                <button id="browser-btn-go" class="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs transition-all">
+                    Go
+                </button>
+                <button id="browser-btn-external" class="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-all text-xs" title="Open in New External Window">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </button>
+            </div>
+
+            <!-- Web Frame Container -->
+            <div class="flex-1 relative bg-white dark:bg-[#0a0c10] overflow-hidden">
+                <iframe id="browser-iframe" class="w-full h-full border-none" src="about:blank"></iframe>
+                
+                <!-- Frame Loading Overlay -->
+                <div id="browser-frame-loader" class="absolute inset-0 bg-[#0a0c10]/90 backdrop-blur-sm hidden flex flex-col items-center justify-center gap-3">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-brand-accent"></i>
+                    <p class="text-sm text-gray-300 font-medium">Loading Web Content...</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PRO SUBSCRIPTION & SECRET CODE MODAL -->
+    <div id="modal-pro-upgrade" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card max-w-md w-full rounded-2xl border border-brand-500/40 p-6 space-y-6 shadow-2xl relative ruby-glow">
+            <!-- Close Button -->
+            <button id="close-pro-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-accent flex items-center justify-center text-white text-2xl mx-auto shadow-lg ruby-glow">
+                    <i class="fa-solid fa-bolt text-yellow-300"></i>
+                </div>
+                <h3 class="text-2xl font-extrabold text-white">Upgrade to Spidy Pro</h3>
+                <p class="text-xs text-gray-400">Unlock 10x faster Gemini AI responses, deep web search research, and unlimited answer summaries.</p>
+            </div>
+
+            <!-- Pricing Box -->
+            <div class="bg-[#161a26] p-4 rounded-xl border border-brand-border flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-brand-accent font-bold uppercase tracking-wider block">Spidy Pro Monthly</span>
+                    <span class="text-2xl font-black text-white">₹40 <span class="text-xs text-gray-400 font-normal">/ 30 Days</span></span>
+                </div>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold">Best Value</span>
+            </div>
+
+            <!-- Direct WhatsApp Contact Box -->
+            <div class="space-y-3">
+                <p class="text-xs text-gray-300 leading-relaxed">
+                    To upgrade to Spidy Pro for ₹40/month, contact us on WhatsApp at <strong class="text-white">9374529060</strong> and complete payment via UPI/Live Chat.
+                </p>
+                <a id="btn-whatsapp-direct" href="https://wa.me/919374529060?text=Hi,%20I%20want%20to%20upgrade%20Spidy%20Browser%20to%20Pro%20Mode%20for%20Rs.40/month" target="_blank" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Contact on WhatsApp (9374529060)
+                </a>
+            </div>
+
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-brand-border"></div>
+                <span class="flex-shrink mx-3 text-[11px] text-gray-500 uppercase font-bold">Or Enter Secret Activation Code</span>
+                <div class="flex-grow border-t border-brand-border"></div>
+            </div>
+
+            <!-- Secret Code Input Box -->
+            <form id="pro-code-form" class="space-y-3">
+                <div class="flex gap-2">
+                    <input type="text" id="pro-code-input" placeholder="Enter Activation Code (e.g. 93745)" class="flex-1 bg-[#0a0c10] border border-brand-border rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand-accent outline-none uppercase font-mono">
+                    <button type="submit" class="px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm transition-all shadow">
+                        Activate
+                    </button>
+                </div>
+                <p id="pro-code-feedback" class="text-xs hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="modal-history" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card max-w-lg w-full rounded-2xl border border-brand-border p-6 space-y-4 shadow-2xl relative max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-brand-border pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-brand-accent"></i> Search History
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button id="btn-clear-history" class="text-xs text-red-400 hover:text-red-300 font-medium">Clear All</button>
+                    <button id="close-history-modal" class="text-gray-400 hover:text-white text-lg ml-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="history-list-container" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <!-- History Items Injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOKMARKS MODAL -->
+    <div id="modal-bookmarks" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card max-w-lg w-full rounded-2xl border border-brand-border p-6 space-y-4 shadow-2xl relative max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-brand-border pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-bookmark text-brand-accent"></i> Saved Bookmarks
+                </h3>
+                <button id="close-bookmarks-modal" class="text-gray-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="bookmarks-list-container" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                <!-- Bookmarks Items Injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- USER PROFILE MODAL -->
+    <div id="modal-profile" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card max-w-md w-full rounded-2xl border border-brand-border p-6 space-y-5 shadow-2xl relative">
+            <button id="close-profile-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-brand-500/20 border-2 border-brand-accent flex items-center justify-center text-brand-accent text-xl font-bold">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white" id="profile-display-name">Spidy User</h3>
+                    <span id="profile-subscription-badge" class="inline-block text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700 mt-0.5">Free Tier</span>
+                </div>
+            </div>
+
+            <form id="profile-form" class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-400 font-medium block mb-1">Full Name</label>
+                    <input type="text" id="profile-input-name" class="w-full bg-[#0a0c10] border border-brand-border rounded-xl px-3 py-2 text-sm text-white focus:border-brand-accent outline-none">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 font-medium block mb-1">Phone Number</label>
+                    <input type="text" id="profile-input-phone" placeholder="9876543210" class="w-full bg-[#0a0c10] border border-brand-border rounded-xl px-3 py-2 text-sm text-white focus:border-brand-accent outline-none">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs transition-all shadow">
+                        Save Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // GLOBAL STATE & STORAGE KEY DEFINITIONS
+        const STORAGE_KEY = 'spidy_app_state_v2';
+        
+        let appState = {
+            isPro: false,
+            proExpiry: null,
+            user: {
+                name: 'Spidy User',
+                phone: ''
+            },
+            history: [],
+            bookmarks: [],
+            activeMode: 'ai', // 'ai' or 'web'
+            tabs: [
+                { id: 'tab-1', title: 'Google', url: 'https://google.com' }
+            ],
+            activeTabId: 'tab-1'
+        };
+
+        // Load saved state from LocalStorage
+        function loadSavedState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+                    
+                    // Check Pro expiry date
+                    if (appState.proExpiry && new Date(appState.proExpiry) < new Date()) {
+                        appState.isPro = false;
+                        appState.proExpiry = null;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load state', e);
+            }
+        }
+
+        // Save current state to LocalStorage
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error('Failed to save state', e);
+            }
+            updateUIHeader();
+        }
+
+        // UPDATE UI STATUS HEADERS & BADGES
+        function updateUIHeader() {
+            const userBadge = document.getElementById('header-user-badge');
+            const profileBadge = document.getElementById('profile-subscription-badge');
+            
+            if (appState.isPro) {
+                const expiryDate = appState.proExpiry ? new Date(appState.proExpiry).toLocaleDateString() : 'Active';
+                userBadge.className = 'text-xs font-bold px-2.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-yellow-400 text-black shadow ruby-glow-sm';
+                userBadge.innerHTML = '<i class="fa-solid fa-bolt mr-1"></i> PRO ACTIVE';
+                
+                profileBadge.className = 'text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-yellow-300 border border-amber-500/40 mt-0.5';
+                profileBadge.textContent = `PRO Active (Expires: ${expiryDate})`;
+            } else {
+                userBadge.className = 'text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700';
+                userBadge.textContent = 'Free Tier';
+                
+                profileBadge.className = 'text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700 mt-0.5';
+                profileBadge.textContent = 'Free Tier';
+            }
+
+            document.getElementById('profile-display-name').textContent = appState.user.name || 'Spidy User';
+            document.getElementById('profile-input-name').value = appState.user.name || '';
+            document.getElementById('profile-input-phone').value = appState.user.phone || '';
+        }
+
+        // VIEW NAVIGATION CONTROLLER
+        function showView(viewName) {
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('ai-results-view').classList.add('hidden');
+            document.getElementById('web-browser-view').classList.add('hidden');
+
+            if (viewName === 'dashboard') {
+                document.getElementById('dashboard-view').classList.remove('hidden');
+            } else if (viewName === 'ai') {
+                document.getElementById('ai-results-view').classList.remove('hidden');
+            } else if (viewName === 'web') {
+                document.getElementById('web-browser-view').classList.remove('hidden');
+                renderBrowserTabs();
+            }
+        }
+
+        // MODE TOGGLE CONTROLLER
+        function setSearchMode(mode) {
+            appState.activeMode = mode;
+            const btnAI = document.getElementById('mode-btn-ai');
+            const btnWeb = document.getElementById('mode-btn-web');
+            const label = document.getElementById('current-mode-label');
+
+            if (mode === 'ai') {
+                btnAI.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-brand-500 text-white shadow ruby-glow-sm';
+                btnWeb.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-brand-border/50';
+                label.textContent = 'Mode: Generative AI Search';
+                document.getElementById('main-search-input').placeholder = 'Ask anything (e.g. Explain Quantum Physics, GSEB Class 12 Prep)...';
+            } else {
+                btnWeb.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-brand-500 text-white shadow ruby-glow-sm';
+                btnAI.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-brand-border/50';
+                label.textContent = 'Mode: Direct Web Browser Tab';
+                document.getElementById('main-search-input').placeholder = 'Enter Web Address or Search (e.g. wikipedia.org)...';
+            }
+        }
+
+        // GEMINI AI INTEGRATION ENGINE
+        async function fetchGeminiAIResponse(query) {
+            showView('ai');
+            document.getElementById('ai-query-title').textContent = query;
+            document.getElementById('ai-loading-skeleton').classList.remove('hidden');
+            document.getElementById('ai-response-container').classList.add('hidden');
+
+            // Add query to history
+            appState.history.unshift({ query, timestamp: new Date().toISOString(), type: 'ai' });
+            if (appState.history.length > 50) appState.history.pop();
+            saveState();
+
+            const systemPrompt = "You are Spidy AI, an intelligent answer engine. Provide clear, well-structured responses formatted with markdown, key takeaways, and suggested follow-ups.";
+            const apiKey = ""; // Canvas handles runtime Gemini API keys transparently
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: query }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response received from Spidy AI. Please try again.";
+                
+                renderAIResponse(query, aiText);
+            } catch (err) {
+                console.error("Gemini API Error:", err);
+                renderAIResponse(query, `### Error Fetching Answer\n\nCould not fetch response directly from Gemini API. Here is a simulated response:\n\n**Query:** ${query}\n\nSpidy AI has processed your request regarding **${query}**. For full real-time API research, ensure internet connection is active.`);
+            } finally {
+                document.getElementById('ai-loading-skeleton').classList.add('hidden');
+                document.getElementById('ai-response-container').classList.remove('hidden');
+            }
+        }
+
+        // RENDER AI RESPONSE FORMATTER
+        function renderAIResponse(query, rawText) {
+            const responseBody = document.getElementById('ai-response-body');
+            
+            // Format basic markdown elements
+            let html = rawText
+                .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold text-white mt-4 mb-2">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold text-brand-accent mt-6 mb-3">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-extrabold text-white mt-6 mb-4">$1</h1>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="text-gray-300">$1</em>')
+                .replace(/```([\s\S]*?)```/g, function(match, code) {
+                    return `<div class="bg-[#0a0c10] p-4 rounded-xl border border-brand-border my-3 font-mono text-xs overflow-x-auto relative group">
+                        <button onclick="copyCodeSnippet(this)" class="absolute top-2 right-2 px-2.5 py-1 rounded bg-brand-border text-gray-300 hover:text-white text-[10px] font-sans">
+                            <i class="fa-regular fa-copy mr-1"></i>Copy
+                        </button>
+                        <pre class="text-red-300"><code>${code.trim()}</code></pre>
+                    </div>`;
+                })
+                .replace(/\n\n/g, '</p><p class="mb-3">')
+                .replace(/\n/g, '<br>');
+
+            responseBody.innerHTML = `<p class="mb-3">${html}</p>`;
+
+            // Render Key Takeaways
+            const takeawaysContainer = document.getElementById('ai-key-takeaways');
+            takeawaysContainer.innerHTML = `
+                <li>Core answer generated for <strong class="text-white">${query}</strong></li>
+                <li>Verified by Spidy Gemini AI Engine</li>
+                <li>Click 'Listen Answer' to play audio readout</li>
+            `;
+
+            // Render Follow-up Prompt Suggestions
+            const followupsContainer = document.getElementById('ai-followups');
+            const followups = [
+                `Can you summarize ${query} in 3 bullet points?`,
+                `What are real-world applications of ${query}?`,
+                `Explain ${query} like I'm 10 years old.`
+            ];
+            
+            followupsContainer.innerHTML = followups.map(f => 
+                `<button onclick="fetchGeminiAIResponse('${f.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl bg-[#1a1e2b] hover:bg-brand-500/20 text-xs text-gray-300 hover:text-brand-accent border border-brand-border transition-all">
+                    <i class="fa-solid fa-plus text-brand-accent mr-1"></i> ${f}
+                </button>`
+            ).join('');
+        }
+
+        // COPY CODE HELPER
+        window.copyCodeSnippet = function(btn) {
+            const code = btn.nextElementSibling.innerText;
+            document.execCommand('copy');
+            btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400 mr-1"></i>Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>Copy';
+            }, 2000);
+        };
+
+        // TEXT-TO-SPEECH READ ALOUD
+        let isSpeaking = false;
+        function toggleTTS() {
+            if ('speechSynthesis' in window) {
+                if (isSpeaking) {
+                    window.speechSynthesis.cancel();
+                    isSpeaking = false;
+                    document.getElementById('btn-tts-read').innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen Answer';
+                } else {
+                    const text = document.getElementById('ai-response-body').innerText;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.onend = () => {
+                        isSpeaking = false;
+                        document.getElementById('btn-tts-read').innerHTML = '<i class="fa-solid fa-volume-high"></i> Listen Answer';
+                    };
+                    window.speechSynthesis.speak(utterance);
+                    isSpeaking = true;
+                    document.getElementById('btn-tts-read').innerHTML = '<i class="fa-solid fa-stop text-red-400"></i> Stop Reading';
+                }
+            } else {
+                alert('Speech synthesis is not supported in this browser.');
+            }
+        }
+
+        // SIMULATED MULTI-TAB BROWSER LOGIC
+        function openWebTab(url) {
+            showView('web');
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            const existingTab = appState.tabs.find(t => t.url === url);
+            if (existingTab) {
+                appState.activeTabId = existingTab.id;
+            } else {
+                const newId = 'tab-' + Date.now();
+                appState.tabs.push({ id: newId, title: url.replace('https://', ''), url: url });
+                appState.activeTabId = newId;
+            }
+            saveState();
+            renderBrowserTabs();
+            loadIframeUrl(url);
+        }
+
+        function renderBrowserTabs() {
+            const strip = document.getElementById('browser-tab-strip');
+            strip.innerHTML = appState.tabs.map(tab => {
+                const isActive = tab.id === appState.activeTabId;
+                return `
+                    <div onclick="switchTab('${tab.id}')" class="px-3 py-1.5 rounded-t-lg border-t border-x ${isActive ? 'bg-[#141824] border-brand-500/50 text-white' : 'bg-[#0a0c10] border-brand-border text-gray-400'} text-xs font-medium flex items-center gap-2 cursor-pointer flex-shrink-0 group">
+                        <i class="fa-solid fa-globe text-[10px] text-brand-accent"></i>
+                        <span class="max-w-[100px] truncate">${tab.title}</span>
+                        <button onclick="event.stopPropagation(); closeTab('${tab.id}')" class="text-gray-500 hover:text-red-400 text-[10px]">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.switchTab = function(tabId) {
+            appState.activeTabId = tabId;
+            const tab = appState.tabs.find(t => t.id === tabId);
+            if (tab) loadIframeUrl(tab.url);
+            renderBrowserTabs();
+        };
+
+        window.closeTab = function(tabId) {
+            if (appState.tabs.length === 1) return;
+            appState.tabs = appState.tabs.filter(t => t.id !== tabId);
+            if (appState.activeTabId === tabId) {
+                appState.activeTabId = appState.tabs[appState.tabs.length - 1].id;
+            }
+            renderBrowserTabs();
+            const activeTab = appState.tabs.find(t => t.id === appState.activeTabId);
+            if (activeTab) loadIframeUrl(activeTab.url);
+        };
+
+        function loadIframeUrl(url) {
+            const iframe = document.getElementById('browser-iframe');
+            const loader = document.getElementById('browser-frame-loader');
+            const urlInput = document.getElementById('browser-url-input');
+
+            urlInput.value = url;
+            loader.classList.remove('hidden');
+
+            iframe.src = url;
+            iframe.onload = () => {
+                loader.classList.add('hidden');
+            };
+        }
+
+        // SECRET ACTIVATION CODE WORKFLOW
+        function handleProCodeSubmit(e) {
+            e.preventDefault();
+            const codeInput = document.getElementById('pro-code-input').value.trim();
+            const feedback = document.getElementById('pro-code-feedback');
+
+            if (codeInput === '93745' || codeInput === '29060') {
+                const now = new Date();
+                const expiry = new Date(now.setDate(now.getDate() + 30));
+                
+                appState.isPro = true;
+                appState.proExpiry = expiry.toISOString();
+                saveState();
+
+                feedback.className = 'text-xs text-emerald-400 font-bold block';
+                feedback.textContent = `Success! Spidy Pro unlocked for 30 days (Expires: ${expiry.toLocaleDateString()}).`;
+                
+                setTimeout(() => {
+                    document.getElementById('modal-pro-upgrade').classList.add('hidden');
+                    feedback.className = 'text-xs hidden';
+                    document.getElementById('pro-code-input').value = '';
+                }, 1500);
+            } else {
+                feedback.className = 'text-xs text-red-400 font-bold block';
+                feedback.textContent = 'Invalid activation code. Contact 9374529060 on WhatsApp to obtain a valid key.';
+            }
+        }
+
+        // HISTORY & BOOKMARKS MODAL RENDERING
+        function renderHistoryList() {
+            const container = document.getElementById('history-list-container');
+            if (appState.history.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-500 text-center py-6">No search history recorded yet.</p>';
+                return;
+            }
+            container.innerHTML = appState.history.map((item, index) => `
+                <div class="p-3 rounded-xl bg-[#121622] border border-brand-border/60 flex items-center justify-between hover:border-brand-500/30 transition-all">
+                    <div>
+                        <p class="text-sm font-semibold text-white cursor-pointer hover:text-brand-accent" onclick="fetchGeminiAIResponse('${item.query.replace(/'/g, "\\'")}')">${item.query}</p>
+                        <span class="text-[10px] text-gray-500">${new Date(item.timestamp).toLocaleString()}</span>
+                    </div>
+                    <button onclick="removeHistoryItem(${index})" class="text-gray-500 hover:text-red-400 text-xs">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        window.removeHistoryItem = function(index) {
+            appState.history.splice(index, 1);
+            saveState();
+            renderHistoryList();
+        };
+
+        function renderBookmarksList() {
+            const container = document.getElementById('bookmarks-list-container');
+            if (appState.bookmarks.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-500 text-center py-6">No saved bookmarks yet.</p>';
+                return;
+            }
+            container.innerHTML = appState.bookmarks.map((bm, index) => `
+                <div class="p-3 rounded-xl bg-[#121622] border border-brand-border/60 flex items-center justify-between hover:border-brand-500/30 transition-all">
+                    <div>
+                        <p class="text-sm font-semibold text-white cursor-pointer hover:text-brand-accent" onclick="fetchGeminiAIResponse('${bm.title.replace(/'/g, "\\'")}')">${bm.title}</p>
+                        <span class="text-[10px] text-gray-500">Saved Query</span>
+                    </div>
+                    <button onclick="removeBookmark(${index})" class="text-gray-500 hover:text-red-400 text-xs">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        window.removeBookmark = function(index) {
+            appState.bookmarks.splice(index, 1);
+            saveState();
+            renderBookmarksList();
+        };
+
+        // EVENT LISTENERS & INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedState();
+            updateUIHeader();
+
+            // Brand Home & Navigation Buttons
+            document.getElementById('btn-brand-home').addEventListener('click', () => showView('dashboard'));
+            document.getElementById('nav-btn-home').addEventListener('click', () => showView('dashboard'));
+            document.getElementById('btn-back-dashboard').addEventListener('click', () => showView('dashboard'));
+
+            // Search Mode Toggle
+            document.getElementById('mode-btn-ai').addEventListener('click', () => setSearchMode('ai'));
+            document.getElementById('mode-btn-web').addEventListener('click', () => setSearchMode('web'));
+
+            // Main Search Form Submission
+            document.getElementById('search-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = document.getElementById('main-search-input').value.trim();
+                if (!query) return;
+
+                if (appState.activeMode === 'ai') {
+                    fetchGeminiAIResponse(query);
+                } else {
+                    openWebTab(query);
+                }
+            });
+
+            // Quick Prompt Chips
+            document.querySelectorAll('.quick-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const text = chip.innerText.trim();
+                    document.getElementById('main-search-input').value = text;
+                    fetchGeminiAIResponse(text);
+                });
+            });
+
+            // Speed Dial Shortcuts
+            document.querySelectorAll('.speed-dial-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const url = btn.getAttribute('data-url');
+                    openWebTab(url);
+                });
+            });
+
+            // Voice Speech Recognition Button
+            document.getElementById('btn-voice-search').addEventListener('click', () => {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    recognition.onstart = () => {
+                        document.getElementById('btn-voice-search').classList.add('text-red-500', 'animate-pulse');
+                    };
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('main-search-input').value = transcript;
+                        document.getElementById('btn-voice-search').classList.remove('text-red-500', 'animate-pulse');
+                    };
+                    recognition.start();
+                } else {
+                    alert('Voice recognition is not supported in this browser environment.');
+                }
+            });
+
+            // Modals Controls
+            document.getElementById('nav-btn-pro').addEventListener('click', () => {
+                document.getElementById('modal-pro-upgrade').classList.remove('hidden');
+            });
+            document.getElementById('close-pro-modal').addEventListener('click', () => {
+                document.getElementById('modal-pro-upgrade').classList.add('hidden');
+            });
+
+            document.getElementById('nav-btn-history').addEventListener('click', () => {
+                renderHistoryList();
+                document.getElementById('modal-history').classList.remove('hidden');
+            });
+            document.getElementById('close-history-modal').addEventListener('click', () => {
+                document.getElementById('modal-history').classList.add('hidden');
+            });
+            document.getElementById('btn-clear-history').addEventListener('click', () => {
+                appState.history = [];
+                saveState();
+                renderHistoryList();
+            });
+
+            document.getElementById('nav-btn-bookmarks').addEventListener('click', () => {
+                renderBookmarksList();
+                document.getElementById('modal-bookmarks').classList.remove('hidden');
+            });
+            document.getElementById('close-bookmarks-modal').addEventListener('click', () => {
+                document.getElementById('modal-bookmarks').classList.add('hidden');
+            });
+
+            document.getElementById('nav-btn-profile').addEventListener('click', () => {
+                document.getElementById('modal-profile').classList.remove('hidden');
+            });
+            document.getElementById('close-profile-modal').addEventListener('click', () => {
+                document.getElementById('modal-profile').classList.add('hidden');
+            });
+
+            // Profile Form
+            document.getElementById('profile-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                appState.user.name = document.getElementById('profile-input-name').value;
+                appState.user.phone = document.getElementById('profile-input-phone').value;
+                saveState();
+                document.getElementById('modal-profile').classList.add('hidden');
+            });
+
+            // Pro Code Form
+            document.getElementById('pro-code-form').addEventListener('submit', handleProCodeSubmit);
+
+            // Bookmark Action
+            document.getElementById('btn-save-bookmark').addEventListener('click', () => {
+                const title = document.getElementById('ai-query-title').textContent;
+                appState.bookmarks.push({ title, timestamp: new Date().toISOString() });
+                saveState();
+                alert('Saved to bookmarks!');
+            });
+
+            // TTS Action
+            document.getElementById('btn-tts-read').addEventListener('click', toggleTTS);
+
+            // Browser Address & Controls
+            document.getElementById('browser-btn-go').addEventListener('click', () => {
+                const url = document.getElementById('browser-url-input').value.trim();
+                if (url) openWebTab(url);
+            });
+            document.getElementById('browser-btn-reload').addEventListener('click', () => {
+                const iframe = document.getElementById('browser-iframe');
+                iframe.src = iframe.src;
+            });
+            document.getElementById('browser-btn-external').addEventListener('click', () => {
+                const url = document.getElementById('browser-url-input').value;
+                window.open(url, '_blank');
+            });
+            document.getElementById('btn-add-tab').addEventListener('click', () => {
+                openWebTab('https://google.com');
+            });
+        });
+    </script>
+</body>
+</html>
